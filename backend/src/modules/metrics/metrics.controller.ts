@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { getMetricsSummary } from './metrics.service';
+import { getCommitsPerDay, getMetricsSummary } from './metrics.service';
 
 export const getMetrics = async (
   request: Request,
@@ -15,6 +15,20 @@ export const getMetrics = async (
     response.status(500).json({
       message: 'Failed to fetch metrics',
       error: error.message,
+    });
+  }
+};
+
+export const getCommitTrends = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const data = await getCommitsPerDay();
+    res.status(200).json(data);
+  } catch (error) {
+    res.status(500).json({
+      message: 'Failed to fetch trends',
     });
   }
 };

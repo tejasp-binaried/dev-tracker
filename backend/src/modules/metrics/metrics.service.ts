@@ -31,3 +31,21 @@ export const getMetricsSummary = async (): Promise<MetricsSummary> => {
     developerStats,
   };
 };
+
+export const getCommitsPerDay = async () => {
+  const result = await db.query(`
+    SELECT 
+      TO_CHAR(commit_date, 'YYYY-MM-DD') as date,
+      COUNT(*) as count
+    FROM commits
+    GROUP BY TO_CHAR(commit_date, 'YYYY-MM-DD')
+    ORDER BY date ASC
+  `);
+
+  return result.rows.map((row) => ({
+    date: row.date,
+    count: Number(row.count),
+  }));
+};
+
+
