@@ -15,3 +15,7 @@ export const fetchLeaderboard = async (): Promise<LeaderboardEntry[]> => {
   const response = await apiClient.get<LeaderboardEntry[]>('/metrics/leaderboard');
   return response.data;
 };
+
+export const syncGithubData = async (): Promise<void> => {
+  await apiClient.get('/github/sync');
+};

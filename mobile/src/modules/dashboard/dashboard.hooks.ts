@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { fetchMetricsSummary, fetchCommitTrends, fetchLeaderboard } from './dashboard.service';
+import { fetchMetricsSummary, fetchCommitTrends, fetchLeaderboard, syncGithubData } from './dashboard.service';
 import { MetricsSummary, TrendData, LeaderboardEntry, APP_STATUS, AppStatus } from './dashboard.types';
 import { DASHBOARD_STRINGS } from './dashboard.constants';
 
@@ -9,10 +9,11 @@ export const useDashboardData = () => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [status, setStatus] = useState<AppStatus>(APP_STATUS.IDLE);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
 
-  const loadAllData = useCallback(async () => {
+  const loadAllData = useCallback(async (showLoading = true) => {
     try {
-      setStatus(APP_STATUS.LOADING);
+      if (showLoading) setStatus(APP_STATUS.LOADING);
       setErrorMessage(null);
 
       const [summary, trendData, leaderboardData] = await Promise.all([
@@ -26,11 +27,23 @@ export const useDashboardData = () => {
       setLeaderboard(leaderboardData);
       setStatus(APP_STATUS.SUCCESS);
     } catch (err: any) {
-      setStatus(APP_STATUS.ERROR);
+      if (showLoading) setStatus(APP_STATUS.ERROR);
       setErrorMessage(DASHBOARD_STRINGS.ERROR_CONNECTION);
       console.error('Dashboard Load Error:', err.message);
     }
   }, []);
+
+  const triggerSync = useCallback(async () => {
+    try {
+      setIsSyncing(true);
+      await syncGithubData();
+      await loadAllData(false); // Refresh data after sync without full screen loading
+    } catch (err: any) {
+      console.error('Sync Error:', err.message);
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [loadAllData]);
 
   useEffect(() => {
     loadAllData();
@@ -42,6 +55,8 @@ export const useDashboardData = () => {
     leaderboard,
     status,
     errorMessage,
+    isSyncing,
     refresh: loadAllData,
+    triggerSync,
   };
 };

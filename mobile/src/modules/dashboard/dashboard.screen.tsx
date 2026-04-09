@@ -1,11 +1,11 @@
-import { View, Text, StyleSheet, ActivityIndicator, ScrollView, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, ScrollView, Dimensions, TouchableOpacity } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { APP_STATUS } from './dashboard.types';
 import { DASHBOARD_STRINGS } from './dashboard.constants';
 import { useDashboardData } from './dashboard.hooks';
 
 export const DashboardScreen = () => {
-  const { metrics, trends, leaderboard, status, errorMessage, refresh } = useDashboardData();
+  const { metrics, trends, leaderboard, status, errorMessage, isSyncing, refresh, triggerSync } = useDashboardData();
 
   if (status === APP_STATUS.LOADING) {
     return (
@@ -29,7 +29,18 @@ export const DashboardScreen = () => {
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.header}>{DASHBOARD_STRINGS.HEADER}</Text>
+      <View style={styles.headerRow}>
+        <Text style={styles.header}>{DASHBOARD_STRINGS.HEADER}</Text>
+        <TouchableOpacity
+          style={[styles.syncButton, isSyncing && styles.syncButtonDisabled]}
+          onPress={triggerSync}
+          disabled={isSyncing}
+        >
+          <Text style={styles.syncButtonText}>
+            {isSyncing ? DASHBOARD_STRINGS.SYNCING : DASHBOARD_STRINGS.SYNC_ACTION}
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Total Commits Card */}
       <View style={styles.card}>
@@ -57,7 +68,7 @@ export const DashboardScreen = () => {
 
       {/* Leaderboard Section */}
       <View style={styles.card}>
-        <Text style={styles.label}>{DASHBOARD_STRINGS.LEADERBOARD}</Text>
+        <Text style={styles.label}>Leaderboard 🏆</Text>
         {leaderboard.map((dev, index) => (
           <View key={dev.authorEmail} style={styles.dividerRow}>
             <Text style={styles.name}>
@@ -87,7 +98,7 @@ export const DashboardScreen = () => {
           </View>
         ))}
       </View>
-      
+
       <View style={styles.footerSpacing} />
     </ScrollView>
   );
@@ -116,12 +127,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#fff',
   },
-  header: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 30,
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
     marginTop: 20,
+  },
+  header: {
+    fontSize: 24,
+    fontWeight: 'bold',
     color: '#333',
+  },
+  syncButton: {
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#388E3C',
+  },
+  syncButtonDisabled: {
+    backgroundColor: '#A5D6A7',
+    borderColor: '#A5D6A7',
+  },
+  syncButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 12,
   },
   card: {
     backgroundColor: '#fff',

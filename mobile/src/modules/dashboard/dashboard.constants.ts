@@ -6,6 +6,8 @@ export const DASHBOARD_STRINGS = {
   TOP_CONTRIBUTOR: 'Top Contributor Summary',
   ALL_DEVELOPERS: 'All Developers',
   LOADING: 'Loading data...',
+  SYNCING: 'Syncing with GitHub...',
+  SYNC_ACTION: 'Sync Now 🔄',
   ERROR_CONNECTION: 'Connection failed. Is the backend running?',
   RETRY: 'Tap to retry',
 } as const;
