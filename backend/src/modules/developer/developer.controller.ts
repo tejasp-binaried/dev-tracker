@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { fetchRepositoryCommits, Commit } from '../github/github.service';
 import { GITHUB_CONFIG } from '../../shared/constants/github.constants';
+import { getMetricsSummary } from '../metrics/metrics.service';
 
 export const getDeveloperCommits = async (
   request: Request,
@@ -21,5 +22,23 @@ export const getDeveloperCommits = async (
       message: 'Failed to fetch commits',
       error: error.message,
     });
+  }
+};
+
+export const getDevelopers = async (
+  _req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { developerStats } = await getMetricsSummary();
+    const formattedDevelopers = developerStats.map(dev => ({
+      id: dev.authorEmail,
+      authorName: dev.authorName,
+      commitCount: dev.commitCount
+    }));
+    res.status(200).json(formattedDevelopers);
+  } catch (error: any) {
+    console.error(`Error in getDevelopers: ${error.message}`);
+    res.status(500).json({ message: 'Failed to fetch developers' });
   }
 };

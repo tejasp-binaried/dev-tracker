@@ -3,6 +3,9 @@ export const ROUTES = {
     SYNC: '/github/sync',
     RECENT: '/github/recent',
   },
+  DEVELOPERS: {
+    LIST: '/developers',
+  },
   METRICS: {
     SUMMARY: '/metrics/summary',
     TRENDS: '/metrics/trends',

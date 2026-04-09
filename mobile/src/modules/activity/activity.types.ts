@@ -1,7 +1,6 @@
 export interface ActivityEntry {
-  sha: string;
-  authorName: string;
-  authorEmail: string;
+  id: string;
+  author: string;
   message: string;
-  commitDate: string;
+  date: string;
 }
