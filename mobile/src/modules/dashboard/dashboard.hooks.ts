@@ -9,11 +9,11 @@ export const useDashboardData = () => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [status, setStatus] = useState<AppStatus>(APP_STATUS.IDLE);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isSyncing, setIsSyncing] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const loadAllData = useCallback(async (showLoading = true) => {
+  const loadData = useCallback(async (isInitial = false) => {
     try {
-      if (showLoading) setStatus(APP_STATUS.LOADING);
+      if (isInitial) setStatus(APP_STATUS.LOADING);
       setErrorMessage(null);
 
       const [summary, trendData, leaderboardData] = await Promise.all([
@@ -27,27 +27,27 @@ export const useDashboardData = () => {
       setLeaderboard(leaderboardData);
       setStatus(APP_STATUS.SUCCESS);
     } catch (err: any) {
-      if (showLoading) setStatus(APP_STATUS.ERROR);
+      if (isInitial) setStatus(APP_STATUS.ERROR);
       setErrorMessage(DASHBOARD_STRINGS.ERROR_CONNECTION);
-      console.error('Dashboard Load Error:', err.message);
+      console.error('Data Load Error:', err.message);
     }
   }, []);
 
-  const triggerSync = useCallback(async () => {
+  const refreshData = useCallback(async () => {
     try {
-      setIsSyncing(true);
+      setIsRefreshing(true);
       await syncGithubData();
-      await loadAllData(false); // Refresh data after sync without full screen loading
+      await loadData();
     } catch (err: any) {
-      console.error('Sync Error:', err.message);
+      console.error('Refresh Error:', err.message);
     } finally {
-      setIsSyncing(false);
+      setIsRefreshing(false);
     }
-  }, [loadAllData]);
+  }, [loadData]);
 
   useEffect(() => {
-    loadAllData();
-  }, [loadAllData]);
+    loadData(true);
+  }, [loadData]);
 
   return {
     metrics,
@@ -55,8 +55,8 @@ export const useDashboardData = () => {
     leaderboard,
     status,
     errorMessage,
-    isSyncing,
-    refresh: loadAllData,
-    triggerSync,
+    isRefreshing,
+    loadData,
+    refreshData,
   };
 };

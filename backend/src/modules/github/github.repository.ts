@@ -21,3 +21,16 @@ export const insertCommitList = async (
     );
   }
 };
+
+export const getRecentCommits = async (limit: number = 20): Promise<Commit[]> => {
+  const result = await db.query(
+    `
+    SELECT sha, author_name as "authorName", author_email as "authorEmail", message, commit_date as "commitDate"
+    FROM commits
+    ORDER BY commit_date DESC
+    LIMIT $1
+    `,
+    [limit]
+  );
+  return result.rows;
+};

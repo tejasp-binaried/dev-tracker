@@ -1,11 +1,29 @@
-import { View, Text, StyleSheet, ActivityIndicator, ScrollView, Dimensions, TouchableOpacity } from 'react-native';
-import { LineChart } from 'react-native-chart-kit';
-import { APP_STATUS } from './dashboard.types';
-import { DASHBOARD_STRINGS } from './dashboard.constants';
-import { useDashboardData } from './dashboard.hooks';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  ScrollView,
+  RefreshControl,
+  Dimensions,
+  TouchableOpacity,
+} from "react-native";
+import { LineChart } from "react-native-chart-kit";
+import { APP_STATUS } from "./dashboard.types";
+import { DASHBOARD_STRINGS } from "./dashboard.constants";
+import { useDashboardData } from "./dashboard.hooks";
 
 export const DashboardScreen = () => {
-  const { metrics, trends, leaderboard, status, errorMessage, isSyncing, refresh, triggerSync } = useDashboardData();
+  const { 
+    metrics, 
+    trends, 
+    leaderboard, 
+    status, 
+    errorMessage, 
+    isRefreshing, 
+    loadData, 
+    refreshData 
+  } = useDashboardData();
 
   if (status === APP_STATUS.LOADING) {
     return (
@@ -20,7 +38,10 @@ export const DashboardScreen = () => {
     return (
       <View style={styles.center}>
         <Text style={styles.errorText}>{errorMessage}</Text>
-        <Text style={[styles.text, styles.retryLink]} onPress={refresh}>
+        <Text
+          style={[styles.text, styles.retryLink]}
+          onPress={() => loadData(true)}
+        >
           {DASHBOARD_STRINGS.RETRY}
         </Text>
       </View>
@@ -28,18 +49,18 @@ export const DashboardScreen = () => {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView 
+      style={styles.container}
+      refreshControl={
+        <RefreshControl 
+          refreshing={isRefreshing} 
+          onRefresh={refreshData} 
+          tintColor="#2196F3"
+        />
+      }
+    >
       <View style={styles.headerRow}>
         <Text style={styles.header}>{DASHBOARD_STRINGS.HEADER}</Text>
-        <TouchableOpacity
-          style={[styles.syncButton, isSyncing && styles.syncButtonDisabled]}
-          onPress={triggerSync}
-          disabled={isSyncing}
-        >
-          <Text style={styles.syncButtonText}>
-            {isSyncing ? DASHBOARD_STRINGS.SYNCING : DASHBOARD_STRINGS.SYNC_ACTION}
-          </Text>
-        </TouchableOpacity>
       </View>
 
       {/* Total Commits Card */}
@@ -68,7 +89,7 @@ export const DashboardScreen = () => {
 
       {/* Leaderboard Section */}
       <View style={styles.card}>
-        <Text style={styles.label}>Leaderboard 🏆</Text>
+        <Text style={styles.label}>{DASHBOARD_STRINGS.LEADERBOARD}</Text>
         {leaderboard.map((dev, index) => (
           <View key={dev.authorEmail} style={styles.dividerRow}>
             <Text style={styles.name}>
@@ -84,7 +105,9 @@ export const DashboardScreen = () => {
         <View style={styles.card}>
           <Text style={styles.label}>{DASHBOARD_STRINGS.TOP_CONTRIBUTOR}</Text>
           <Text style={styles.name}>{metrics.topContributor.authorName}</Text>
-          <Text style={styles.subText}>Total Commits: {metrics.topContributor.commitCount}</Text>
+          <Text style={styles.subText}>
+            Total Commits: {metrics.topContributor.commitCount}
+          </Text>
         </View>
       )}
 
@@ -104,6 +127,8 @@ export const DashboardScreen = () => {
   );
 };
 
+export default DashboardScreen;
+
 const CHART_CONFIG = {
   backgroundColor: '#fff',
   backgroundGradientFrom: '#fff',
@@ -119,13 +144,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
   },
   center: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
   },
   headerRow: {
     flexDirection: 'row',
@@ -136,32 +161,15 @@ const styles = StyleSheet.create({
   },
   header: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  syncButton: {
-    backgroundColor: '#4CAF50',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#388E3C',
-  },
-  syncButtonDisabled: {
-    backgroundColor: '#A5D6A7',
-    borderColor: '#A5D6A7',
-  },
-  syncButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 12,
+    fontWeight: "bold",
+    color: "#333",
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 12,
     padding: 20,
     marginBottom: 20,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -169,47 +177,47 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
-    color: '#666',
-    textTransform: 'uppercase',
+    color: "#666",
+    textTransform: "uppercase",
     letterSpacing: 1,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 10,
   },
   value: {
     fontSize: 48,
-    fontWeight: 'bold',
-    color: '#2196F3',
+    fontWeight: "bold",
+    color: "#2196F3",
     marginTop: 5,
-    textAlign: 'center',
+    textAlign: "center",
   },
   name: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     marginTop: 5,
   },
   subText: {
     fontSize: 14,
-    color: '#777',
+    color: "#777",
   },
   dividerRow: {
     marginTop: 10,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: '#eee',
+    borderTopColor: "#eee",
   },
   text: {
     fontSize: 16,
-    color: '#333',
+    color: "#333",
   },
   errorText: {
     fontSize: 16,
-    color: '#f44336',
-    textAlign: 'center',
+    color: "#f44336",
+    textAlign: "center",
     paddingHorizontal: 20,
   },
   retryLink: {
     marginTop: 10,
-    color: '#2196F3',
+    color: "#2196F3",
   },
   chart: {
     marginVertical: 8,

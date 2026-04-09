@@ -1,6 +1,7 @@
 export const ROUTES = {
   GITHUB: {
     SYNC: '/github/sync',
+    RECENT: '/github/recent',
   },
   METRICS: {
     SUMMARY: '/metrics/summary',
