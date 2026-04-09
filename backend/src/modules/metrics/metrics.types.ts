@@ -9,3 +9,15 @@ export interface MetricsSummary {
   topContributor: DeveloperMetrics | null;
   developerStats: DeveloperMetrics[];
 }
+
+export interface TrendData {
+  date: string;
+  count: number;
+}
+
+export interface LeaderboardEntry {
+  authorName: string;
+  authorEmail: string;
+  commitCount: number;
+  productivityScore: number;
+}

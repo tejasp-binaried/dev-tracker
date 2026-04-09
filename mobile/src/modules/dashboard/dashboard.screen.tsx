@@ -1,54 +1,27 @@
-import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, ScrollView, Dimensions } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
-import { fetchMetricsSummary, fetchCommitTrends } from './dashboard.service';
-import { MetricsSummary, TrendData } from './dashboard.types';
+import { APP_STATUS } from './dashboard.types';
+import { DASHBOARD_STRINGS } from './dashboard.constants';
+import { useDashboardData } from './dashboard.hooks';
 
 export const DashboardScreen = () => {
-  const [metrics, setMetrics] = useState<MetricsSummary | null>(null);
-  const [trendData, setTrendData] = useState<TrendData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { metrics, trends, leaderboard, status, errorMessage, refresh } = useDashboardData();
 
-  const loadMetricsData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const [summary, trends] = await Promise.all([
-        fetchMetricsSummary(),
-        fetchCommitTrends()
-      ]);
-      
-      setMetrics(summary);
-      setTrendData(trends);
-    } catch (err: any) {
-      setError('Connection failed. Is the backend running?');
-      console.error('Failed to load dashboard data:', err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadMetricsData();
-  }, []);
-
-  if (loading) {
+  if (status === APP_STATUS.LOADING) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#0000ff" />
-        <Text style={styles.text}>Loading data...</Text>
+        <ActivityIndicator size="large" color="#2196F3" />
+        <Text style={styles.text}>{DASHBOARD_STRINGS.LOADING}</Text>
       </View>
     );
   }
 
-  if (error) {
+  if (status === APP_STATUS.ERROR) {
     return (
       <View style={styles.center}>
-        <Text style={styles.errorText}>{error}</Text>
-        <Text style={[styles.text, { marginTop: 10, color: '#2196F3' }]} onPress={loadMetricsData}>
-          Tap to retry
+        <Text style={styles.errorText}>{errorMessage}</Text>
+        <Text style={[styles.text, styles.retryLink]} onPress={refresh}>
+          {DASHBOARD_STRINGS.RETRY}
         </Text>
       </View>
     );
@@ -56,84 +29,79 @@ export const DashboardScreen = () => {
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.header}>Developer Tracker</Text>
+      <Text style={styles.header}>{DASHBOARD_STRINGS.HEADER}</Text>
 
       {/* Total Commits Card */}
       <View style={styles.card}>
-        <Text style={styles.label}>Total Commits</Text>
+        <Text style={styles.label}>{DASHBOARD_STRINGS.TOTAL_COMMITS}</Text>
         <Text style={styles.value}>{metrics?.totalCommits ?? 0}</Text>
       </View>
 
       {/* Commit Trends Chart */}
-      {trendData.length > 0 && (
+      {trends.length > 0 && (
         <View style={styles.card}>
-          <Text style={styles.label}>Commit Trends</Text>
+          <Text style={styles.label}>{DASHBOARD_STRINGS.TRENDS}</Text>
           <LineChart
             data={{
-              labels: trendData.map((t) => t.date.split('-').slice(1).join('/')), // Shorten date
-              datasets: [
-                {
-                  data: trendData.map((t) => t.count),
-                },
-              ],
+              labels: trends.map((t) => t.date.split('-').slice(1).join('/')),
+              datasets: [{ data: trends.map((t) => t.count) }],
             }}
             width={Dimensions.get('window').width - 80}
             height={220}
-            chartConfig={{
-              backgroundColor: '#fff',
-              backgroundGradientFrom: '#fff',
-              backgroundGradientTo: '#fff',
-              decimalPlaces: 0,
-              color: (opacity = 1) => `rgba(33, 150, 243, ${opacity})`,
-              labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-              style: {
-                borderRadius: 16,
-              },
-              propsForDots: {
-                r: '6',
-                strokeWidth: '2',
-                stroke: '#ffa726',
-              },
-            }}
+            chartConfig={CHART_CONFIG}
             bezier
-            style={{
-              marginVertical: 8,
-              borderRadius: 16,
-            }}
+            style={styles.chart}
           />
         </View>
       )}
 
-      {/* Top Contributor */}
+      {/* Leaderboard Section */}
+      <View style={styles.card}>
+        <Text style={styles.label}>{DASHBOARD_STRINGS.LEADERBOARD}</Text>
+        {leaderboard.map((dev, index) => (
+          <View key={dev.authorEmail} style={styles.dividerRow}>
+            <Text style={styles.name}>
+              {index + 1}. {dev.authorName}
+            </Text>
+            <Text style={styles.subText}>Score: {dev.productivityScore}</Text>
+          </View>
+        ))}
+      </View>
+
+      {/* Top Contributor Summary */}
       {metrics?.topContributor && (
         <View style={styles.card}>
-          <Text style={styles.label}>Top Contributor</Text>
-          <Text style={styles.name}>
-            {metrics.topContributor.authorName}
-          </Text>
-          <Text style={styles.subText}>
-            Commits: {metrics.topContributor.commitCount}
-          </Text>
+          <Text style={styles.label}>{DASHBOARD_STRINGS.TOP_CONTRIBUTOR}</Text>
+          <Text style={styles.name}>{metrics.topContributor.authorName}</Text>
+          <Text style={styles.subText}>Total Commits: {metrics.topContributor.commitCount}</Text>
         </View>
       )}
 
-      {/* Developer List */}
+      {/* Full Developer List */}
       <View style={styles.card}>
-        <Text style={styles.label}>Developers</Text>
-
+        <Text style={styles.label}>{DASHBOARD_STRINGS.ALL_DEVELOPERS}</Text>
         {metrics?.developerStats.map((dev) => (
-          <View key={dev.authorEmail} style={styles.devRow}>
+          <View key={dev.authorEmail} style={styles.dividerRow}>
             <Text style={styles.name}>{dev.authorName}</Text>
-            <Text style={styles.subText}>
-              {dev.commitCount} commits
-            </Text>
+            <Text style={styles.subText}>{dev.commitCount} commits</Text>
           </View>
         ))}
       </View>
       
-      <View style={{ height: 40 }} />
+      <View style={styles.footerSpacing} />
     </ScrollView>
   );
+};
+
+const CHART_CONFIG = {
+  backgroundColor: '#fff',
+  backgroundGradientFrom: '#fff',
+  backgroundGradientTo: '#fff',
+  decimalPlaces: 0,
+  color: (opacity = 1) => `rgba(33, 150, 243, ${opacity})`,
+  labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+  style: { borderRadius: 16 },
+  propsForDots: { r: '6', strokeWidth: '2', stroke: '#ffa726' },
 };
 
 const styles = StyleSheet.create({
@@ -190,7 +158,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#777',
   },
-  devRow: {
+  dividerRow: {
     marginTop: 10,
     paddingTop: 10,
     borderTopWidth: 1,
@@ -205,5 +173,16 @@ const styles = StyleSheet.create({
     color: '#f44336',
     textAlign: 'center',
     paddingHorizontal: 20,
+  },
+  retryLink: {
+    marginTop: 10,
+    color: '#2196F3',
+  },
+  chart: {
+    marginVertical: 8,
+    borderRadius: 16,
+  },
+  footerSpacing: {
+    height: 40,
   },
 });

@@ -1,5 +1,5 @@
 import { apiClient } from '../../services/apiClient';
-import { MetricsSummary, TrendData } from './dashboard.types';
+import { MetricsSummary, TrendData, LeaderboardEntry } from './dashboard.types';
 
 export const fetchMetricsSummary = async (): Promise<MetricsSummary> => {
   const response = await apiClient.get<MetricsSummary>('/metrics/summary');
@@ -8,5 +8,10 @@ export const fetchMetricsSummary = async (): Promise<MetricsSummary> => {
 
 export const fetchCommitTrends = async (): Promise<TrendData[]> => {
   const response = await apiClient.get<TrendData[]>('/metrics/trends');
+  return response.data;
+};
+
+export const fetchLeaderboard = async (): Promise<LeaderboardEntry[]> => {
+  const response = await apiClient.get<LeaderboardEntry[]>('/metrics/leaderboard');
   return response.data;
 };

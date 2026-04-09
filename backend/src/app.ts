@@ -1,14 +1,15 @@
 import express, { Application } from "express";
 import { getDeveloperCommits } from "./modules/developer/developer.controller";
-import { getCommitTrends, getMetrics } from "./modules/metrics/metrics.controller";
-
+import { getCommitTrends, getLeaderboard, getMetrics } from "./modules/metrics/metrics.controller";
+import { ROUTES } from "./shared/constants/routes.constants";
 
 const app: Application = express();
 
 app.use(express.json());
 
-app.get("/developers/commits", getDeveloperCommits);
-app.get("/metrics/summary", getMetrics);
-app.get('/metrics/trends', getCommitTrends);
+app.get(ROUTES.DEVELOPERS.COMMITS, getDeveloperCommits);
+app.get(ROUTES.METRICS.SUMMARY, getMetrics);
+app.get(ROUTES.METRICS.TRENDS, getCommitTrends);
+app.get(ROUTES.METRICS.LEADERBOARD, getLeaderboard);
 
 export default app;
