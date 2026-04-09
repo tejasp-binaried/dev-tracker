@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import { fetchMetricsSummary, MetricsSummary } from './dashboard.service';
+import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
+import { fetchMetricsSummary } from './dashboard.service';
+import { MetricsSummary } from './dashboard.types';
 
 export const DashboardScreen = () => {
   const [metrics, setMetrics] = useState<MetricsSummary | null>(null);
@@ -38,7 +39,7 @@ export const DashboardScreen = () => {
     return (
       <View style={styles.center}>
         <Text style={styles.errorText}>{error}</Text>
-        <Text style={[styles.text, { marginTop: 10 }]} onPress={loadMetrics}>
+        <Text style={[styles.text, { marginTop: 10, color: '#2196F3' }]} onPress={loadMetrics}>
           Tap to retry
         </Text>
       </View>
@@ -46,14 +47,44 @@ export const DashboardScreen = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <Text style={styles.header}>Developer Tracker</Text>
-      
+
+      {/* Total Commits Card */}
       <View style={styles.card}>
         <Text style={styles.label}>Total Commits</Text>
         <Text style={styles.value}>{metrics?.totalCommits ?? 0}</Text>
       </View>
-    </View>
+
+      {/* Top Contributor */}
+      {metrics?.topContributor && (
+        <View style={styles.card}>
+          <Text style={styles.label}>Top Contributor</Text>
+          <Text style={styles.name}>
+            {metrics.topContributor.authorName}
+          </Text>
+          <Text style={styles.subText}>
+            Commits: {metrics.topContributor.commitCount}
+          </Text>
+        </View>
+      )}
+
+      {/* Developer List */}
+      <View style={styles.card}>
+        <Text style={styles.label}>Developers</Text>
+
+        {metrics?.developerStats.map((dev) => (
+          <View key={dev.authorEmail} style={styles.devRow}>
+            <Text style={styles.name}>{dev.authorName}</Text>
+            <Text style={styles.subText}>
+              {dev.commitCount} commits
+            </Text>
+          </View>
+        ))}
+      </View>
+
+      <View style={{ height: 40 }} />
+    </ScrollView>
   );
 };
 
@@ -80,24 +111,41 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 20,
+    marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    alignItems: 'center',
   },
   label: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#666',
     textTransform: 'uppercase',
     letterSpacing: 1,
+    fontWeight: 'bold',
   },
   value: {
     fontSize: 48,
     fontWeight: 'bold',
     color: '#2196F3',
     marginTop: 5,
+    textAlign: 'center',
+  },
+  name: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginTop: 5,
+  },
+  subText: {
+    fontSize: 14,
+    color: '#777',
+  },
+  devRow: {
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
   },
   text: {
     fontSize: 16,

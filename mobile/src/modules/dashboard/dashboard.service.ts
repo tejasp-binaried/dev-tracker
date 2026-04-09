@@ -1,18 +1,7 @@
 import { apiClient } from '../../services/apiClient';
+import { MetricsSummary } from './dashboard.types';
 
-export interface MetricsSummary {
-  totalCommits: number;
-}
-
-/**
- * Fetches metrics summary from the backend.
- */
 export const fetchMetricsSummary = async (): Promise<MetricsSummary> => {
-  try {
-    const response = await apiClient.get<MetricsSummary>('/metrics/summary');
-    return response.data;
-  } catch (error: any) {
-    console.error('API Error:', error.message);
-    throw error;
-  }
+  const response = await apiClient.get<MetricsSummary>('/metrics/summary');
+  return response.data;
 };
